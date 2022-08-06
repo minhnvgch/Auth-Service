@@ -2,17 +2,17 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserEntity } from 'src/models/entities/user.entity';
 import { AuthController } from 'src/modules/auth/auth.controller';
 import { AuthService } from 'src/modules/auth/auth.service';
 import { jwtConstants } from 'src/modules/auth/constants';
 import { JwtStrategy } from 'src/modules/auth/strategies/jwt.strategy';
 import { LocalStrategy } from 'src/modules/auth/strategies/local.strategy';
 import { AbilityModule } from 'src/modules/ability/ability.module';
+import { UserRepository } from 'src/models/repositories/user.resposive';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserEntity]),
+    TypeOrmModule.forFeature([UserRepository]),
     JwtModule.register({
       secret: jwtConstants.secret,
       signOptions: {

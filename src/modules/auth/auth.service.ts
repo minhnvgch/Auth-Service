@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { UserEntity } from 'src/models/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -9,14 +8,19 @@ import { UserRepository } from 'src/models/repositories/user.resposive';
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(UserEntity)
-    private readonly userRespository: UserRepository,
+    @InjectRepository(UserRepository)
+    private readonly userRepository: UserRepository,
     private jwtService: JwtService,
   ) {}
 
+  // TODO
+  async getUserById(userId: number): Promise<UserEntity> {
+    return await this.userRepository.findUserById(userId);
+  }
+
   // Use in LocalAuthGuard
   async validateUser(username: string, password: string): Promise<any> {
-    const user = await this.findOne({ username });
+    const user = await this.userRepository.findUserByUserName(username);
     const hashedPassword = await bcrypt.hash(password, 12);
     if (user && (await bcrypt.compare(password, user.password))) {
       const { password, ...result } = user;
@@ -41,7 +45,7 @@ export class AuthService {
   async register(username: string, password: string) {
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    const result = this.userRespository.save({
+    const result = this.userRepository.save({
       username: username,
       password: hashedPassword,
     });
@@ -50,14 +54,10 @@ export class AuthService {
     return result;
   }
 
-  async findOne(condition: any): Promise<UserEntity> {
-    return this.userRespository.findOneBy(condition);
-  }
-
-  // Not handle
+  // TODO
   async refreshToken() {}
 
   async deleteUser(username: string) {
-    return this.userRespository.delete({ username: username });
+    return this.userRepository.delete({ username: username });
   }
 }
