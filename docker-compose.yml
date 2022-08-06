@@ -1,0 +1,17 @@
+version: '3'
+services:
+  mysql:
+    image: mysql:8.0.25
+    container_name: auth
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --sql_mode="" --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: '1'
+      MYSQL_DATABASE: auth
+      MYSQL_USER: 'admin'
+      MYSQL_PASSWORD: '1'
+      LANG: C.UTF-8
+    volumes:
+      - './docker/.docker/data/db:/var/lib/mysql'
+      - './docker/.docker/mnt:/mnt'
+    ports:
+      - "3306:3306"
