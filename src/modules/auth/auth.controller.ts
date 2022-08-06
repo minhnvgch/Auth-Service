@@ -16,23 +16,22 @@ import { Action } from 'src/modules/ability/ability.factory';
 import { UserEntity } from 'src/models/entities/user.entity';
 import { CheckAbilities } from 'src/modules/ability/ability.decorator';
 import { AbilitiesGuard } from 'src/modules/ability/abilities.guard';
+import { RegisterDto } from 'src/modules/auth/dtos/register.dto';
+import { LoginDto } from 'src/modules/auth/dtos/login.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  async register(
-    @Body('username') username: string,
-    @Body('password') password: string,
-  ) {
-    return this.authService.register(username, password);
+  async register(@Body() registerDto: RegisterDto) {
+    return this.authService.register(registerDto);
   }
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Request() req) {
-    return this.authService.login(req.user);
+  async login(@Body() loginDto: LoginDto) {
+    return this.authService.login(loginDto);
   }
 
   @UseGuards(JwtAuthGuard)
