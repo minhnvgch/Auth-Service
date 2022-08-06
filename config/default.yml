@@ -1,0 +1,21 @@
+master:
+  type: 'mysql'
+  host: 'http://127.0.0.1'
+  port: 5432
+  username: admin
+  password: 1
+  database: test
+  logging: false
+  entities:
+    - 'dist/**/*.entity{.ts,.js}'
+
+report:
+  type: 'mysql'
+  host: 'http://127.0.0.1'
+  port: 5432
+  username: admin
+  password: 1
+  database: test
+  logging: false
+  entities:
+    - 'dist/**/*.entity{.ts,.js}'

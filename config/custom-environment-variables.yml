@@ -1,0 +1,20 @@
+app:
+  name: APP_NAME
+  port: APP_PORT
+  prefix: APP_PREFIX
+
+master:
+  type: 'mysql'
+  host: MYSQL_HOST
+  port: MYSQL_PORT
+  username: MYSQL_USER
+  password: MYSQL_PASS
+  database: MYSQL_DATABASE
+
+report:
+  type: 'mysql'
+  host: REPORT_MYSQL_HOST
+  port: REPORT_MYSQL_PORT
+  username: REPORT_MYSQL_USER
+  password: REPORT_MYSQL_PASS
+  database: REPORT_MYSQL_DATABASE
