@@ -1,12 +1,18 @@
-import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import * as moment from "moment";
+
+import { JwtService } from '@nestjs/jwt';
+import { BadRequestException, HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserEntity } from 'src/models/entities/user.entity';
+import { GoogleRecaptchaValidator } from '@nestlab/google-recaptcha/services/google-recaptcha.validator';
+import { GoogleRecaptchaException } from '@nestlab/google-recaptcha';
+
+import { LoginDto } from 'src/modules/auth/dtos/login.dto';
+import { UserEntity, UserStatus } from 'src/models/entities/user.entity';
 import { UserRepository } from 'src/models/repositories/user.resposive';
 import { RegisterDto } from 'src/modules/auth/dtos/register.dto';
 import { AuthErrorMessage, saltBcrypt } from 'src/modules/auth/auth.constants';
-import { LoginDto } from 'src/modules/auth/dtos/login.dto';
+import { response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -14,35 +20,97 @@ export class AuthService {
     @InjectRepository(UserRepository)
     private readonly userRepository: UserRepository,
     private jwtService: JwtService,
+    private readonly recaptchaValidator: GoogleRecaptchaValidator
   ) {}
 
-  // TODO
   async getUserById(userId: number): Promise<UserEntity> {
     return await this.userRepository.findUserById(userId);
   }
 
-  async validateUser(username: string, password: string): Promise<any> {
-    const user = await this.userRepository.findUserByUserName(username);
-    if (user && (await bcrypt.compare(password, user.password))) {
-      const { password, ...result } = user;
-      return result;
+  async login(loginDto: LoginDto): Promise<any> {
+
+    const user = await this.userRepository.findUserByUserName(loginDto.username);
+
+    await this.checkUserNotLockAndExist(user);
+
+    await this.checkCaptchaWhenWrongLoginBiggerThanFive(user, loginDto);
+    
+    if (await bcrypt.compare(loginDto.password, user.password)) {
+      return await this.createAccessTokenAndRefreshToken(loginDto);
     }
-    return null;
+    
+    user.wrong_login_attemps++;
+    await this.userRepository.update(user.id, {wrong_login_attemps: user.wrong_login_attemps});
+
+    if (user.wrong_login_attemps < 5) throw new BadRequestException(AuthErrorMessage.InvalidUser);
+    
+    if (user.wrong_login_attemps >= 10) await this.LockAccountWhenWrongLoginBiggerThanTen(user.wrong_login_attemps, loginDto);
+
+    throw new BadRequestException(AuthErrorMessage.InvalidUser);
   }
 
-  async login(loginDto: LoginDto): Promise<UserEntity> {
+  async checkUserNotLockAndExist(user: UserEntity) {
+    if (!user) throw new BadRequestException(AuthErrorMessage.InvalidUser);
+
+    if (user.status == UserStatus.Lock) {
+      if ( user.lock_time > new Date()) throw new BadRequestException(AuthErrorMessage.AccountIsLocked + user.lock_time);
+      await this.userRepository.update(user.id, {
+          status: UserStatus.Unlock
+      });
+    }
+  }
+
+  async checkCaptchaWhenWrongLoginBiggerThanFive(user: UserEntity, loginDto: LoginDto) {
+    if (user.wrong_login_attemps >= 5) {
+      console.log("run check captcha");
+      const result = await this.recaptchaValidator.validate({
+          response: loginDto.recaptcha,
+          score: 0.8,
+          action: 'login',
+      });
+      
+      if (!result.success) {
+        await this.userRepository.update(user.id, {
+           wrong_login_attemps: user.wrong_login_attemps + 1
+        });
+
+        throw new BadRequestException(AuthErrorMessage.WrongCaptcha);
+        //throw new GoogleRecaptchaException(result.errors);      
+      }
+    }
+  }
+
+  async createAccessTokenAndRefreshToken(loginDto: LoginDto) {
     const user = await this.userRepository.findUserByUserName(
       loginDto.username,
     );
+    await this.userRepository.update(user.id, 
+      {wrong_login_attemps: 0}
+    );
 
-    if (!user) throw new BadRequestException(AuthErrorMessage.InvalidUser);
-    if (await bcrypt.compare(loginDto.password, user.password)) {
-      delete user.password;
-      user['access_token'] = this.jwtService.sign(user);
-      return user;
+    const payload = { id: user.id, username: user.username, role: user.role};
+    return {
+      access_token: this.jwtService.sign(payload, {
+      secret: process.env.ACCESS_TOKEN_SECRET,
+      expiresIn: 60 * 15,
+      }),
+      refresh_token: this.jwtService.sign(payload, {
+      secret: process.env.REFRESH_TOKEN_SECRET,
+      expiresIn: 60 * 60 * 24 * 7, 
+      })
     }
+  }
 
-    throw new BadRequestException(AuthErrorMessage.InvalidUser);
+  async LockAccountWhenWrongLoginBiggerThanTen (wrong_login_attemps: number, loginDto: LoginDto) {
+    const user = await this.userRepository.findUserByUserName(loginDto.username);
+    let time = (wrong_login_attemps - 10 )*5;
+        let new_lock_time = moment().add(time, 'm').format('YYYY-MM-DD HH:mm:ss');
+
+        await this.userRepository.update(user.id, {
+            lock_time: new_lock_time,
+            status: UserStatus.Lock
+        });
+        throw new BadRequestException(AuthErrorMessage.AccountIsLocked + new_lock_time);
   }
 
   async register(registerDt: RegisterDto) {
@@ -60,6 +128,7 @@ export class AuthService {
     return this.userRepository.save(registerDt);
   }
 
-  // TODO
-  async refreshToken() {}
+  async refreshToken() {
+    return "oke";
+  }
 }

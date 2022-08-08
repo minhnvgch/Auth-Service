@@ -1,11 +1,6 @@
-import {
-  Ability,
-  AbilityBuilder,
-  AbilityClass,
-  ExtractSubjectType,
-  InferSubjects,
-} from '@casl/ability';
+import { Ability, AbilityBuilder, AbilityClass, ExtractSubjectType, InferSubjects} from '@casl/ability';
 import { Injectable } from '@nestjs/common';
+
 import { UserEntity } from 'src/models/entities/user.entity';
 
 export enum Action {
@@ -27,7 +22,7 @@ export class AbilityFactory {
       Ability as AbilityClass<AppAbility>,
     );
 
-    if (user.is_admin == 'true') {
+    if (user.role == 'admin') {
       can(Action.Manage, 'all');
     } else {
       can(Action.Read, UserEntity);

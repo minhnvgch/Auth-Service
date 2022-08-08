@@ -1,23 +1,14 @@
-import {
-  Body,
-  UseGuards,
-  Request,
-  ForbiddenException,
-  Put,
-} from '@nestjs/common';
-import { Controller, Get, Post } from '@nestjs/common';
-import { AuthService } from 'src/modules/auth/auth.service';
-import { Res } from '@nestjs/common';
+import {Body,UseGuards,Request,ForbiddenException,Put, Res,Controller, Get, Post} from '@nestjs/common';
 import { Response } from 'express';
-import { UnauthorizedException } from '@nestjs/common';
-import { LocalAuthGuard } from 'src/modules/auth/guards/local-auth.guard';
+
+import { AuthService } from 'src/modules/auth/auth.service';
 import { JwtAuthGuard } from 'src/modules/auth/guards/jwt-auth.guard';
 import { Action } from 'src/modules/ability/ability.factory';
-import { UserEntity } from 'src/models/entities/user.entity';
 import { CheckAbilities } from 'src/modules/ability/ability.decorator';
 import { AbilitiesGuard } from 'src/modules/ability/abilities.guard';
 import { RegisterDto } from 'src/modules/auth/dtos/register.dto';
 import { LoginDto } from 'src/modules/auth/dtos/login.dto';
+import { RefreshJwtAuthGuard } from 'src/modules/auth/guards/jwt-refresh.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -28,7 +19,6 @@ export class AuthController {
     return this.authService.register(registerDto);
   }
 
-  @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
@@ -42,7 +32,7 @@ export class AuthController {
     };
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(RefreshJwtAuthGuard)
   @Post('refresh')
   async refreshTokens() {
     return this.authService.refreshToken();
@@ -53,8 +43,4 @@ export class AuthController {
   async user(@Body('userId') userId: number) {
     return await this.authService.getUserById(userId);
   }
-
-  // TODO
-  // @Put('block-user')
-  // async blockUser(): Promise<UserEntity> {}
 }

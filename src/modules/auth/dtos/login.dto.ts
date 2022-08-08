@@ -1,3 +1,15 @@
-import { RegisterDto } from 'src/modules/auth/dtos/register.dto';
+import { IsEmpty, IsNotEmpty, IsOptional, IsString} from 'class-validator';
 
-export class LoginDto extends RegisterDto {}
+export class LoginDto {
+    @IsString()
+    @IsNotEmpty()
+    username: string;
+
+    @IsString()
+    @IsNotEmpty()
+    password: string;
+
+    @IsOptional()
+    @IsString()
+    recaptcha: string;
+}
