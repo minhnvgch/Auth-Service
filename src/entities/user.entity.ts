@@ -11,12 +11,45 @@ export class UserEntity {
     @Column({name: "password", type: "varchar"})
     public password: string;
 
-    @Column({name: "is_admin", type: "varchar", default: "false"})
-    public is_admin: string;
+    @Column({name: "role", type: "varchar", default: "user"})
+    public role: string;
 
-    // @Column({name: "is_active", type: "boolean"})
-    // public isActive: boolean;
+    @Column({name: "email", type: "varchar", nullable: true})
+    public email: string;
+
+    @Column({name: "phonenumber", type: "varchar", nullable: true})
+    public phonenumber: string;
+
+    @Column({name: "verify_email", type: "varchar", nullable: true})
+    public verify_email: string;
+
+    @Column({name: "verify_phonenumber", type: "varchar", nullable: true})
+    public verify_phonenumber: string;
+
+    @Column({name: "last_change_password", type: "datetime", nullable: true})
+    public last_change_password: Date;
+
+    @Column({name: "type_code", type: "varchar", nullable: true})
+    public type_code: string;
+
+    @Column({name: "confirm_code", type: "varchar", nullable: true})
+    public confirm_code: string;
+
+    @Column({name: "expired_code", type: "datetime", nullable: true})
+    public expired_code: Date;
+
+    @Column({name: "status", type: "varchar", default: "unlock"})
+    public status: UserStatus;
+
+    @Column({name: "wrong_login_attemps", type: "int", default: 0})
+    public wrong_login_attemps: number;
+
+    @Column({name: "lock_time", type: "datetime", nullable: true})
+    public lock_time: Date;
     
-    // @Column({name: "number_login_fall", type: "int"})
-    // public number_login_fall: int;
+}
+
+export enum UserStatus {
+    Lock = 'lock',
+    Unlock = 'unlock'
 }

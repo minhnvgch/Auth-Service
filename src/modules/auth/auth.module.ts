@@ -5,24 +5,27 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { UserEntity } from "src/entities/user.entity";
 import { AuthController } from "src/modules/auth/auth.controller";
 import { AuthService } from "src/modules/auth/auth.service";
-import { jwtConstants } from "src/modules/auth/constants";
 import { JwtStrategy } from "src/modules/auth/strategies/jwt.strategy";
-import { LocalStrategy } from "src/modules/auth/strategies/local.strategy";
-import { AbilityModule } from "../ability/ability.module";
+import { AbilityModule } from "src/modules/ability/ability.module";
+import { RefreshJwtStrategy } from "src/modules/auth/strategies/jwt-refresh-token.strategy";
+import { GoogleRecaptchaModule } from "@nestlab/google-recaptcha";
+import { IncomingMessage } from "http";
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([UserEntity]),
-        JwtModule.register({
-            secret: jwtConstants.secret,
-            signOptions: {
-                expiresIn: '1h'
-            }
-        }),
+        JwtModule,
         PassportModule, 
-        AbilityModule
+        AbilityModule,
+        GoogleRecaptchaModule.forRoot({
+            secretKey: process.env.GOOGLE_RECAPTCHA_SECRET_KEY,
+            response: (req: IncomingMessage) => (req.headers.recaptcha || '').toString(),
+            skipIf: process.env.NODE_ENV !== 'production',
+            actions: ['login'],
+            score: 0.8,
+        })
     ],
-    providers: [AuthService, LocalStrategy, JwtStrategy],
+    providers: [AuthService, JwtStrategy, RefreshJwtStrategy], //LocalStrategy
     controllers: [AuthController],
     exports: [TypeOrmModule]
 })

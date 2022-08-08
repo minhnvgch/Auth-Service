@@ -21,7 +21,7 @@ export class AbilityFactory {
             Ability as AbilityClass<AppAbility>
         );
         
-        if (user.is_admin == 'true') {
+        if (user.role == 'admin') {
             can(Action.Manage, 'all');
         } else {
             can(Action.Read, UserEntity);

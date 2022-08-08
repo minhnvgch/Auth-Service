@@ -1,5 +1,5 @@
 import { SetMetadata } from "@nestjs/common";
-import { Action, Subjects } from "./ability.factory";
+import { Action, Subjects } from "src/modules/ability/ability.factory";
 
 export interface RequiredRule {
     action: Action;
@@ -10,3 +10,4 @@ export const CHECK_ABILITY = 'check_ability';
 
 export const CheckAbilities = (...requirements: RequiredRule[]) => 
     SetMetadata(CHECK_ABILITY, requirements);
+    

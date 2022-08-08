@@ -13,3 +13,4 @@ export const config: DataSourceOptions = {
     entities: [UserEntity],
     synchronize: true,
   }
+  

@@ -1,18 +1,18 @@
-import { Body, UseGuards, Request, ForbiddenException } from "@nestjs/common";
+import { Body, UseGuards, Request, Headers, UsePipes, ValidationPipe } from "@nestjs/common";
 import { Controller, Get, Post } from "@nestjs/common";
 import { AuthService } from "src/modules/auth/auth.service";
 import { JwtService } from "@nestjs/jwt";
 import { Res } from "@nestjs/common";
-import { Req } from "@nestjs/common";
-import { Response } from 'express';
+import { response, Response } from 'express';
 import { UnauthorizedException } from "@nestjs/common";
-import { LocalAuthGuard } from "src/modules/auth/guards/local-auth.guard";
 import { JwtAuthGuard } from "src/modules/auth/guards/jwt-auth.guard";
-import { AbilityFactory, Action } from "../ability/ability.factory";
+import { AbilityFactory, Action } from "src/modules/ability/ability.factory";
 import { UserEntity } from "src/entities/user.entity";
-import { ForbiddenError } from "@casl/ability";
-import { CheckAbilities } from "../ability/ability.decorator";
-import { AbilitiesGuard } from "../ability/abilities.guard";
+import { CheckAbilities } from "src/modules/ability/ability.decorator";
+import { AbilitiesGuard } from "src/modules/ability/abilities.guard";
+import { RefreshJwtAuthGuard } from "src/modules/auth/guards/jwt-refresh.guard";
+import { RegisterDto } from "src/modules/auth/dto/register.dto";
+import { LoginDto } from "./dto/login.dto";
 
 @Controller('auth')
 export class AuthController {
@@ -24,39 +24,29 @@ export class AuthController {
 
     @Post('register')
     async register(
-        @Body('username') username: string,
-        @Body('password') password: string,
+        @Body() data: RegisterDto,
     ) {
-        return this.authService.register(username, password);
+        return this.authService.register(data);
     }
 
-    @UseGuards(LocalAuthGuard)
     @Post('login')
     async login(
-        @Request() req
-        // @Res({passthrough: true}) response : Response
+        @Body() data: LoginDto
     ) {
-        return this.authService.login(req.user);
-
-        // const jwt =  this.authService.login(username, password);
-        // response.cookie('jwt', jwt, {httpOnly: true});
-        // return {
-        //     message: 'success'
-        // };
+        return this.authService.login(data);
     }
 
     // Not handle
     @UseGuards(JwtAuthGuard)
     @Post('logout')
-    logout(@Res({ passthrough: true}) response: Response) {
-        // response.clearCookie('jwt');
+    async logout(@Res({ passthrough: true}) response: Response) {
         return {
             message: 'success'
         }
     }
 
     // Not handle
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(RefreshJwtAuthGuard)
     @Post('refresh')
     async refreshTokens () {
         return this.authService.refreshToken();
