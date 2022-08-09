@@ -2,7 +2,7 @@ import * as bcrypt from 'bcrypt';
 import * as moment from "moment";
 
 import { JwtService } from '@nestjs/jwt';
-import { BadRequestException, HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GoogleRecaptchaValidator } from '@nestlab/google-recaptcha/services/google-recaptcha.validator';
 import { GoogleRecaptchaException } from '@nestlab/google-recaptcha';
@@ -12,7 +12,7 @@ import { UserEntity, UserStatus } from 'src/models/entities/user.entity';
 import { UserRepository } from 'src/models/repositories/user.resposive';
 import { RegisterDto } from 'src/modules/auth/dtos/register.dto';
 import { AuthErrorMessage, saltBcrypt } from 'src/modules/auth/auth.constants';
-import { response } from 'express';
+import { RedisService } from 'src/shares/redis/redis.service';
 
 @Injectable()
 export class AuthService {
@@ -20,7 +20,8 @@ export class AuthService {
     @InjectRepository(UserRepository)
     private readonly userRepository: UserRepository,
     private jwtService: JwtService,
-    private readonly recaptchaValidator: GoogleRecaptchaValidator
+    private readonly recaptchaValidator: GoogleRecaptchaValidator,
+    private cacheManger: RedisService,
   ) {}
 
   async getUserById(userId: number): Promise<UserEntity> {
@@ -89,6 +90,17 @@ export class AuthService {
     );
 
     const payload = { id: user.id, username: user.username, role: user.role};
+
+    await this.cacheManger.set("accesstoken"+ user.id, this.jwtService.sign(payload, {
+      secret: process.env.ACCESS_TOKEN_SECRET,
+      expiresIn: 60 * 15,
+    }));
+
+    await this.cacheManger.set("refreshtoken"+ user.id, this.jwtService.sign(payload, {
+      secret: process.env.REFRESH_TOKEN_SECRET,
+      expiresIn: 60 * 60 * 24 * 7, 
+    }));
+
     return {
       access_token: this.jwtService.sign(payload, {
       secret: process.env.ACCESS_TOKEN_SECRET,
@@ -128,7 +140,13 @@ export class AuthService {
     return this.userRepository.save(registerDt);
   }
 
-  async refreshToken() {
-    return "oke";
+  async refreshToken(user: UserEntity) {
+    const payload = { id: user.id, username: user.username, role: user.role};
+    return {
+      access_token: this.jwtService.sign(payload, {
+        secret: process.env.ACCESS_TOKEN_SECRET,
+        expiresIn: 60 * 15,
+        })
+    };
   }
 }

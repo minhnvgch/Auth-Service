@@ -1,4 +1,6 @@
-import { Module } from '@nestjs/common';
+import * as redisStore from 'cache-manager-redis-store';
+
+import { CacheModule, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from 'src/modules/auth/auth.module';
 import {
@@ -13,6 +15,7 @@ import {
     TypeOrmModule.forRoot(reportConfig),
     TypeOrmModule.forRoot(masterConfig),
     AuthModule,
+    CacheModule.register({store: redisStore})
   ],
   controllers: [],
   providers: [],

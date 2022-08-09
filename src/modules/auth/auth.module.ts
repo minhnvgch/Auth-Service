@@ -11,6 +11,7 @@ import { JwtStrategy } from 'src/modules/auth/strategies/jwt.strategy';
 import { RefreshJwtStrategy } from "src/modules/auth/strategies/jwt-refresh-token.strategy";
 import { AbilityModule } from 'src/modules/ability/ability.module';
 import { UserRepository } from 'src/models/repositories/user.resposive';
+import { RedisModule } from 'src/shares/redis/redis.module';
 
 @Module({
   imports: [
@@ -24,7 +25,8 @@ import { UserRepository } from 'src/models/repositories/user.resposive';
       skipIf: process.env.NODE_ENV !== 'production',
       actions: ['login'],
       score: 0.8,
-    })
+    }),
+    RedisModule
   ],
   providers: [AuthService, JwtStrategy, RefreshJwtStrategy],
   controllers: [AuthController],
