@@ -9,6 +9,7 @@ import { AbilitiesGuard } from 'src/modules/ability/abilities.guard';
 import { RegisterDto } from 'src/modules/auth/dtos/register.dto';
 import { LoginDto } from 'src/modules/auth/dtos/login.dto';
 import { RefreshJwtAuthGuard } from 'src/modules/auth/guards/jwt-refresh.guard';
+import { UserEntity } from 'src/models/entities/user.entity';
 
 @Controller('auth')
 export class AuthController {
@@ -33,7 +34,7 @@ export class AuthController {
   }
 
   @UseGuards(RefreshJwtAuthGuard)
-  @Post('refresh')
+  @Get('refresh')
   async refreshTokens(@Request() req) {
     return this.authService.refreshToken(req.user);
   }
@@ -43,4 +44,17 @@ export class AuthController {
   async user(@Body('userId') userId: number) {
     return await this.authService.getUserById(userId);
   }
+
+  // Test Authorization
+    // Only admin can delete users
+    @UseGuards(AbilitiesGuard)
+    @CheckAbilities({action: Action.Delete, subject: UserEntity})
+    @UseGuards(JwtAuthGuard)
+    @Post('delete-user')
+    async deleteUser(
+        @Body('userId') userId: number,
+        @Res({ passthrough: true}) response: Response,
+    ) {
+      return this.authService.deleteUser(userId);
+    }
 }

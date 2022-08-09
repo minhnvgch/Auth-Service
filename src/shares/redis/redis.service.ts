@@ -8,7 +8,7 @@ export class RedisService {
     async get(key: string): Promise<any> {
         return await this.cache.get(key);
     }
-
+    
     async set(key: string, value: any) {
         await this.cache.set(key, value, 1000);
     }

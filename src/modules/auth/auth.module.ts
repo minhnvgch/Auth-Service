@@ -12,6 +12,7 @@ import { RefreshJwtStrategy } from "src/modules/auth/strategies/jwt-refresh-toke
 import { AbilityModule } from 'src/modules/ability/ability.module';
 import { UserRepository } from 'src/models/repositories/user.resposive';
 import { RedisModule } from 'src/shares/redis/redis.module';
+import { CaptchaModule } from 'src/modules/captcha/captcha.module';
 
 @Module({
   imports: [
@@ -19,14 +20,15 @@ import { RedisModule } from 'src/shares/redis/redis.module';
     JwtModule,
     PassportModule,
     AbilityModule,
-    GoogleRecaptchaModule.forRoot({
-      secretKey: process.env.GOOGLE_RECAPTCHA_SECRET_KEY,
-      response: (req: IncomingMessage) => (req.headers.recaptcha || '').toString(),
-      skipIf: process.env.NODE_ENV !== 'production',
-      actions: ['login'],
-      score: 0.8,
-    }),
-    RedisModule
+    RedisModule,
+    CaptchaModule,
+    // GoogleRecaptchaModule.forRoot({
+    //   secretKey: process.env.GOOGLE_RECAPTCHA_SECRET_KEY,
+    //   response: (req: IncomingMessage) => (req.headers.recaptcha || '').toString(),
+    //   skipIf: process.env.NODE_ENV !== 'production',
+    //   actions: ['login'],
+    //   score: 0.8,
+    // }),
   ],
   providers: [AuthService, JwtStrategy, RefreshJwtStrategy],
   controllers: [AuthController],

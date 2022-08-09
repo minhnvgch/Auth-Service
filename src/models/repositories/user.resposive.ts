@@ -18,4 +18,8 @@ export class UserRepository extends Repository<UserEntity> {
       },
     });
   }
+
+  async deleteUser(id: number): Promise<any> {
+    return await this.delete(id);
+  }
 }

@@ -27,7 +27,7 @@ export class RegisterDto {
     email: string;
 
     @IsOptional()
-    @IsPhoneNumber()
+    @IsPhoneNumber('VN')
     phonenumber: string;
 
     @IsOptional()
@@ -35,6 +35,6 @@ export class RegisterDto {
     verify_email: string;
 
     @IsOptional()
-    @IsPhoneNumber()
+    @IsPhoneNumber('VN')
     verify_phonenumber: string;
 }
